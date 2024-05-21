@@ -48,8 +48,8 @@
 <button id="ajouter-ligne-btn" onclick="ajouterLigne()">Ajouter une ligne</button>
 
 <script>
-    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/YOUR_BIN_ID';
-    const JSONBIN_API_KEY = 'YOUR_API_KEY';
+    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/664ca084ad19ca34f86ce956';
+    const JSONBIN_API_KEY = '$2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y';
 
     $(document).ready(function() {
         chargerTableau();
@@ -100,7 +100,7 @@
             type: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Master-Key': '$2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y'
             },
             data: JSON.stringify({ tableData: data }),
             success: function(response) {
@@ -117,7 +117,7 @@
             url: JSONBIN_URL + '/latest',
             type: 'GET',
             headers: {
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Master-Key': '$2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y'
             },
             success: function(response) {
                 var data = response.record.tableData || [];
