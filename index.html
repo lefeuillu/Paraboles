@@ -1,27 +1,38 @@
 <DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table to JSON</title>
-    <style>
-        #jsonOutput {
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de Paraboles</title>
+<style>
+    #jsonOutput {
             width: 100%;
             height: 200px;
-        }
-    </style>
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Tabletop.js/1.5.1/tabletop.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <table id="myTable">
-        <thead>
-            <tr>
-                <th contenteditable="true">Name</th>
-                <th contenteditable="true">Age</th>
-                <th contenteditable="true">Country</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
+
+<h2>Apocalypse</h2>
+<p>
+    <i>
+    Ici un petit récapitulatif des paraboles que l’on retrouve durant les cours sur les chapitres de l’Apocalypse. N’hésitez pas à ajouter votre pierre à l’édifice 🙏🏾
+    </i>
+</p>
+
+<table class="paraTable" id="table-body">
+    <thead>
+        <tr>
+            <th>Parabole</th>
+            <th>Signification</th>
+            <th>Versets</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="table-body">
+        <tr>
                 <td contenteditable="true">John Doe</td>
                 <td contenteditable="true">30</td>
                 <td contenteditable="true">USA</td>
@@ -31,58 +42,109 @@
                 <td contenteditable="true">25</td>
                 <td contenteditable="true">Canada</td>
             </tr>
-        </tbody>
-    </table>
-    <button id="exportBtn">Export to JSON</button>
-    <button id="importBtn">Import from JSON</button>
-    <textarea id="jsonOutput" readonly></textarea>
+    </tbody>
+</table>
 
-    <script>
-        document.getElementById('exportBtn').addEventListener('click', () => {
-            const table = document.getElementById('myTable');
-            const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent);
-            const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr => {
-                const cells = Array.from(tr.querySelectorAll('td'));
-                const rowData = {};
-                cells.forEach((cell, index) => {
-                    rowData[headers[index]] = cell.textContent;
-                });
-                return rowData;
-            });
+<button id="ajouter-ligne-btn" onclick="ajouterLigne()">Ajouter une ligne</button>
 
-            const jsonString = JSON.stringify(rows, null, 2);
-            document.getElementById('jsonOutput').value = jsonString;
+<script>
+    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/YOUR_BIN_ID';
+    const JSONBIN_API_KEY = 'YOUR_API_KEY';
 
-            // Create or update the data.js script tag
-            let scriptTag = document.getElementById('data-js');
-            if (!scriptTag) {
-                scriptTag = document.createElement('script');
-                scriptTag.id = 'data-js';
-                scriptTag.type = 'text/javascript';
-                document.body.appendChild(scriptTag);
+    $(document).ready(function() {
+        chargerTableau();
+
+        $('#tableau').on('input', function(event) {
+            if (!event.isTrusted) return;
+            sauvegarderTableau();
+        });
+    });
+
+    function ajouterLigne() {
+        var tableau = document.getElementById("table-body");
+        var nouvelleLigne = tableau.insertRow();
+        for (var i = 0; i < 3; i++) {
+            var cellule = nouvelleLigne.insertCell(i);
+            cellule.contentEditable = "true";
+        }
+        var celluleSupprimer = nouvelleLigne.insertCell(3);
+        var boutonSupprimer = document.createElement("button");
+        boutonSupprimer.className = "delete-button";
+        boutonSupprimer.textContent = "❌";
+        boutonSupprimer.onclick = function() {
+            supprimerLigne(this);
+        };
+        celluleSupprimer.appendChild(boutonSupprimer);
+        sauvegarderTableau();
+    }
+
+    function supprimerLigne(bouton) {
+        var ligneASupprimer = bouton.parentNode.parentNode;
+        ligneASupprimer.parentNode.removeChild(ligneASupprimer);
+        sauvegarderTableau();
+    }
+
+    function sauvegarderTableau() {
+        var tableau = document.getElementById("table-body").getElementsByTagName('tbody')[0];
+        var data = [];
+        for (var i = 0; i < tableau.rows.length; i++) {
+            var row = tableau.rows[i];
+            var rowData = [];
+            for (var j = 0; j < row.cells.length - 1; j++) {
+                rowData.push(row.cells[j].innerText);
             }
-            scriptTag.textContent = `const data = ${jsonString};`;
+            data.push(rowData);
+        }
+        $.ajax({
+            url: JSONBIN_URL,
+            type: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_API_KEY
+            },
+            data: JSON.stringify({ tableData: data }),
+            success: function(response) {
+                console.log('Tableau sauvegardé', response);
+            },
+            error: function(err) {
+                console.log('Erreur lors de la sauvegarde', err);
+            }
         });
+    }
 
-        document.getElementById('importBtn').addEventListener('click', () => {
-            fetch('data.json')
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.getElementById('myTable').querySelector('tbody');
-                    tableBody.innerHTML = ''; // Clear existing rows
-
-                    data.forEach(rowData => {
-                        const row = document.createElement('tr');
-                        Object.values(rowData).forEach(cellData => {
-                            const cell = document.createElement('td');
-                            cell.textContent = cellData;
-                            row.appendChild(cell);
-                        });
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => console.error('Error loading JSON:', error));
+    function chargerTableau() {
+        $.ajax({
+            url: JSONBIN_URL + '/latest',
+            type: 'GET',
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            },
+            success: function(response) {
+                var data = response.record.tableData || [];
+                var tableau = document.getElementById("table-body");
+                for (var i = 0; i < data.length; i++) {
+                    var nouvelleLigne = tableau.insertRow();
+                    for (var j = 0; j < data[i].length; j++) {
+                        var cellule = nouvelleLigne.insertCell(j);
+                        cellule.contentEditable = "true";
+                        cellule.innerText = data[i][j];
+                    }
+                    var celluleSupprimer = nouvelleLigne.insertCell(data[i].length);
+                    var boutonSupprimer = document.createElement("button");
+                    boutonSupprimer.className = "delete-button";
+                    boutonSupprimer.textContent = "❌";
+                    boutonSupprimer.onclick = function() {
+                        supprimerLigne(this);
+                    };
+                    celluleSupprimer.appendChild(boutonSupprimer);
+                }
+            },
+            error: function(err) {
+                console.log('Erreur lors du chargement', err);
+            }
         });
-    </script>
+    }
+</script>
+
 </body>
 </html>
