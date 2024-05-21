@@ -8,7 +8,7 @@
     #jsonOutput {
             width: 100%;
             height: 200px;
-        }
+    }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Tabletop.js/1.5.1/tabletop.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -31,8 +31,8 @@
             <th></th>
         </tr>
     </thead>
-     <tbody>
-            <tr>
+    <tbody id="table-body">
+        <tr>
                 <td contenteditable="true">John Doe</td>
                 <td contenteditable="true">30</td>
                 <td contenteditable="true">USA</td>
@@ -42,7 +42,7 @@
                 <td contenteditable="true">25</td>
                 <td contenteditable="true">Canada</td>
             </tr>
-      </tbody>
+    </tbody>
 </table>
 
 <button id="ajouter-ligne-btn" onclick="ajouterLigne()">Ajouter une ligne</button>
