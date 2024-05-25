@@ -100,7 +100,7 @@
             type: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Master-Key': '$2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y'
+                'X-Master-Key': JSONBIN_API_KEY
             },
             data: JSON.stringify({ tableData: data }),
             success: function(response) {
@@ -117,7 +117,7 @@
             url: JSONBIN_URL + '/latest',
             type: 'GET',
             headers: {
-                'X-Master-Key': '$2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y'
+                'X-Master-Key': JSONBIN_API_KEY
             },
             success: function(response) {
                 var data = response.record.tableData || [];
