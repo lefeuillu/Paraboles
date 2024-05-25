@@ -6,12 +6,12 @@
 <title>Tableau de Paraboles</title>
 <style>
     #jsonOutput {
-            width: 100%;
-            height: 200px;
+        width: 100%;
+        height: 200px;
     }
     table {
-        border-collapse:collapse ;
-        width:95%;
+        border-collapse: collapse;
+        width: 95%;
         margin: 0 0 0 70px; /* Centrer horizontalement */
         border: 1px solid rgb(214, 214, 214);
         padding: 8px;
@@ -44,23 +44,20 @@
             <td contenteditable="true"></td>
             <td contenteditable="true"></td>
             <td contenteditable="true"></td>
+            <td></td>
         </tr>
     </tbody>
 </table>
 
 <button id="ajouter-ligne-btn" onclick="ajouterLigne()">Ajouter une ligne</button>
+<button id="sauvegarder-btn" onclick="sauvegarderTableau()">Sauvegarder</button>
 
 <script>
     const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/664ca084ad19ca34f86ce956';
     const JSONBIN_API_KEY = '$2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y';
 
     $(document).ready(function() {
-        chargerTableau();
-
-        $('#tableau').on('input', function(event) {
-            if (!event.isTrusted) return;
-            sauvegarderTableau();
-        });
+        chargerTableauDepuisLocalStorage();
     });
 
     function ajouterLigne() {
@@ -78,13 +75,13 @@
             supprimerLigne(this);
         };
         celluleSupprimer.appendChild(boutonSupprimer);
-        sauvegarderTableau();
+        sauvegarderTableauDansLocalStorage();
     }
 
     function supprimerLigne(bouton) {
         var ligneASupprimer = bouton.parentNode.parentNode;
         ligneASupprimer.parentNode.removeChild(ligneASupprimer);
-        sauvegarderTableau();
+        sauvegarderTableauDansLocalStorage();
     }
 
     function sauvegarderTableau() {
@@ -115,6 +112,41 @@
         });
     }
 
+    function sauvegarderTableauDansLocalStorage() {
+        var tableau = document.getElementById("table-body").getElementsByTagName('tbody')[0];
+        var data = [];
+        for (var i = 0; i < tableau.rows.length; i++) {
+            var row = tableau.rows[i];
+            var rowData = [];
+            for (var j = 0; j < row.cells.length - 1; j++) {
+                rowData.push(row.cells[j].innerText);
+            }
+            data.push(rowData);
+        }
+        localStorage.setItem('tableData', JSON.stringify(data));
+    }
+
+    function chargerTableauDepuisLocalStorage() {
+        var data = JSON.parse(localStorage.getItem('tableData')) || [];
+        var tableau = document.getElementById("table-body");
+        for (var i = 0; i < data.length; i++) {
+            var nouvelleLigne = tableau.insertRow();
+            for (var j = 0; j < data[i].length; j++) {
+                var cellule = nouvelleLigne.insertCell(j);
+                cellule.contentEditable = "true";
+                cellule.innerText = data[i][j];
+            }
+            var celluleSupprimer = nouvelleLigne.insertCell(data[i].length);
+            var boutonSupprimer = document.createElement("button");
+            boutonSupprimer.className = "delete-button";
+            boutonSupprimer.textContent = "❌";
+            boutonSupprimer.onclick = function() {
+                supprimerLigne(this);
+            };
+            celluleSupprimer.appendChild(boutonSupprimer);
+        }
+    }
+
     function chargerTableau() {
         $.ajax({
             url: JSONBIN_URL + '/latest',
@@ -141,6 +173,7 @@
                     };
                     celluleSupprimer.appendChild(boutonSupprimer);
                 }
+                sauvegarderTableauDansLocalStorage();
             },
             error: function(err) {
                 console.log('Erreur lors du chargement', err);
