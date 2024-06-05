@@ -1,75 +1,138 @@
 <DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau avec Enregistrement Automatique</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de Paraboles</title>
+<style>
+    /* Votre style CSS ici */
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Tabletop.js/1.5.1/tabletop.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <table id="dataTable" border="1">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>Âge</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td contenteditable="true">Jean</td>
-                <td contenteditable="true">30</td>
-            </tr>
-            <tr>
-                <td contenteditable="true">Marie</td>
-                <td contenteditable="true">25</td>
-            </tr>
-        </tbody>
-    </table>
-    <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const table = document.getElementById('dataTable');
-        
-            // Fonction pour convertir le tableau HTML en objet JSON
-            function tableToJson(table) {
-                const data = [];
-                const headers = [];
-                for (let i = 0; i < table.rows[0].cells.length; i++) {
-                    headers[i] = table.rows[0].cells[i].innerHTML.toLowerCase();
-                }
-                for (let i = 1; i < table.rows.length; i++) {
-                    const tableRow = table.rows[i];
-                    const rowData = {};
-                    for (let j = 0; j < tableRow.cells.length; j++) {
-                        rowData[headers[j]] = tableRow.cells[j].innerHTML;
-                    }
-                    data.push(rowData);
-                }
-                return data;
-            }
-        
-            // Fonction pour sauvegarder les données sur JSON Bin
-            function saveToJsonBin(data) {
-                const binId = 'votre-bin-id';
-                const secretKey = 'votre-secret-key';
-        
-                fetch(`https://api.jsonbin.io/v3/b/664ca084ad19ca34f86ce956`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': $2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y
-                    },
-                    body: JSON.stringify({tableData: data})
-                }).then(response => response.json())
-                  .then(json => console.log('Données enregistrées:', json))
-                  .catch(error => console.error('Erreur:', error));
-            }
-        
-            // Détection des modifications du tableau
-            table.addEventListener('input', () => {
-                const jsonData = tableToJson(table);
-                saveToJsonBin(jsonData);
-            });
+
+<h2>Apocalypse</h2>
+<p>
+    <i>
+    Ici un petit récapitulatif des paraboles que l’on retrouve durant les cours sur les chapitres de l’Apocalypse. N’hésitez pas à ajouter votre pierre à l’édifice 🙏🏾
+    </i>
+</p>
+
+<table class="paraTable">
+    <thead>
+        <tr>
+            <th>Parabole</th>
+            <th>Signification</th>
+            <th>Versets</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="table-body">
+        <!-- Les lignes du tableau seront ajoutées dynamiquement -->
+    </tbody>
+</table>
+
+<button id="ajouter-ligne-btn" onclick="ajouterLigne()">Ajouter une ligne</button>
+
+<script>
+    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/664ca084ad19ca34f86ce956';
+    const JSONBIN_API_KEY = '$2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y';
+
+    $(document).ready(function() {
+        chargerTableau();
+
+        $('#tableau').on('input', function(event) {
+            if (!event.isTrusted) return;
+            sauvegarderTableau();
         });
-    </script>
+    });
+
+    function ajouterLigne() {
+        var tableau = document.getElementById("table-body");
+        var nouvelleLigne = tableau.insertRow();
+        for (var i = 0; i < 3; i++) {
+            var cellule = nouvelleLigne.insertCell(i);
+            cellule.contentEditable = "true";
+        }
+        var celluleSupprimer = nouvelleLigne.insertCell(4);
+        var boutonSupprimer = document.createElement("button");
+        boutonSupprimer.className = "delete-button";
+        boutonSupprimer.textContent = "❌";
+        boutonSupprimer.onclick = function() {
+            supprimerLigne(this);
+        };
+        celluleSupprimer.appendChild(boutonSupprimer);
+        sauvegarderTableau();
+    }
+
+    function supprimerLigne(bouton) {
+        var ligneASupprimer = bouton.parentNode.parentNode;
+        ligneASupprimer.parentNode.removeChild(ligneASupprimer);
+        sauvegarderTableau();
+    }
+
+    function sauvegarderTableau() {
+        var tableau = document.getElementById("table-body").getElementsByTagName('tbody')[0];
+        var data = [];
+        for (var i = 0; i < tableau.rows.length; i++) {
+            var row = tableau.rows[i];
+            var rowData = [];
+            for (var j = 0; j < row.cells.length - 1; j++) {
+                rowData.push(row.cells[j].innerText);
+            }
+            data.push(rowData);
+        }
+        $.ajax({
+            url: JSONBIN_URL,
+            type: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_API_KEY
+            },
+            data: JSON.stringify({ tableData: data }),
+            success: function(response) {
+                console.log('Tableau sauvegardé', response);
+            },
+            error: function(err) {
+                console.log('Erreur lors de la sauvegarde', err);
+            }
+        });
+    }
+
+    function chargerTableau() {
+        $.ajax({
+            url: JSONBIN_URL + '/latest',
+            type: 'GET',
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            },
+            success: function(response) {
+                var data = response.record.tableData || [];
+                var tableau = document.getElementById("table-body");
+                for (var i = 0; i < data.length; i++) {
+                    var nouvelleLigne = tableau.insertRow();
+                    for (var j = 0; j < data[i].length; j++) {
+                        var cellule = nouvelleLigne.insertCell(j);
+                        cellule.contentEditable = "true";
+                        cellule.innerText = data[i][j];
+                    }
+                    var celluleSupprimer = nouvelleLigne.insertCell(data[i].length);
+                    var boutonSupprimer = document.createElement("button");
+                    boutonSupprimer.className = "delete-button";
+                    boutonSupprimer.textContent = "❌";
+                    boutonSupprimer.onclick = function() {
+                        supprimerLigne(this);
+                    };
+                    celluleSupprimer.appendChild(boutonSupprimer);
+                }
+            },
+            error: function(err) {
+                console.log('Erreur lors du chargement', err);
+            }
+        });
+    }
+</script>
+
 </body>
 </html>
-
