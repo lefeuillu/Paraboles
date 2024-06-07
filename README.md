@@ -1,136 +1,89 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tableau de Paraboles</title>
-<style>
-    /* Votre style CSS ici */
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Tabletop.js/1.5.1/tabletop.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau 2x2 avec compteur et changement de couleur</title>
+    <style>
+        table {
+            margin: 50px auto;
+            border-spacing: 10px;
+        }
+        td {
+            border: none;
+            text-align: center;
+            padding: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border-radius: 30%;
+            position: relative;
+            width: 20px;
+            height: 100px;
+            background-color: rgba(163, 163, 163, 0.5);
+        }
+        td span {
+            visibility: hidden;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
 </head>
 <body>
 
-<h2>Apocalypse</h2>
-<p>
-    <i>
-    Ici un petit récapitulatif des paraboles que l’on retrouve durant les cours sur les chapitres de l’Apocalypse. N’hésitez pas à ajouter votre pierre à l’édifice 🙏🏾
-    </i>
-</p>
-
-<table class="paraTable">
-    <thead>
-        <tr>
-            <th>Parabole</th>
-            <th>Signification</th>
-            <th>Versets</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody id="table-body">
-        <!-- Les lignes du tableau seront ajoutées dynamiquement -->
-    </tbody>
+<table>
+    <tr>
+        <td onclick="increment(this)"><span>0</span></td>
+        <td onclick="increment(this)"><span>0</span></td>
+    </tr>
+    <tr>
+        <td onclick="increment(this)"><span>0</span></td>
+        <td onclick="increment(this)"><span>0</span></td>
+    </tr>
 </table>
 
-<button id="ajouter-ligne-btn" onclick="ajouterLigne()">Ajouter une ligne</button>
+<div id="date" style="display: none;">
+    <!-- Div pour afficher la date -->
+</div>
 
 <script>
-    const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/664ca084ad19ca34f86ce956';
-    const JSONBIN_API_KEY = '$2a$10$DHNAnAemgw/9O9GAoUu1D.sJe5WCn8YsoLQiyWLP1V31e2JsR8W/y';
-
-    $(document).ready(function() {
-        chargerTableau();
-
-        $('#tableau').on('input', function(event) {
-            if (!event.isTrusted) return;
-            sauvegarderTableau();
+    function increment(cell) {
+        let span = cell.querySelector('span');
+        let currentNumber = parseInt(span.textContent);
+        currentNumber = (currentNumber + 1) % 5;
+        span.textContent = currentNumber;
+        
+        let total = 0;
+        document.querySelectorAll('td span').forEach(function(span) {
+            total += parseInt(span.textContent);
         });
-    });
 
-    function ajouterLigne() {
-        var tableau = document.getElementById("table-body");
-        var nouvelleLigne = tableau.insertRow();
-        for (var i = 0; i < 3; i++) {
-            var cellule = nouvelleLigne.insertCell(i);
-            cellule.contentEditable = "true";
+        if (total !== 0) {
+            document.getElementById('date').innerText = new Date().toLocaleDateString('fr-FR');
+            document.getElementById('date').style.display = 'block';
+        } else {
+            document.getElementById('date').style.display = 'none';
         }
-        var celluleSupprimer = nouvelleLigne.insertCell(4);
-        var boutonSupprimer = document.createElement("button");
-        boutonSupprimer.className = "delete-button";
-        boutonSupprimer.textContent = "❌";
-        boutonSupprimer.onclick = function() {
-            supprimerLigne(this);
-        };
-        celluleSupprimer.appendChild(boutonSupprimer);
-        sauvegarderTableau();
-    }
 
-    function supprimerLigne(bouton) {
-        var ligneASupprimer = bouton.parentNode.parentNode;
-        ligneASupprimer.parentNode.removeChild(ligneASupprimer);
-        sauvegarderTableau();
-    }
-
-    function sauvegarderTableau() {
-        var tableau = document.getElementById("table-body").getElementsByTagName('tbody')[0];
-        var data = [];
-        for (var i = 0; i < tableau.rows.length; i++) {
-            var row = tableau.rows[i];
-            var rowData = [];
-            for (var j = 0; j < row.cells.length - 1; j++) {
-                rowData.push(row.cells[j].innerText);
-            }
-            data.push(rowData);
+        switch (currentNumber) {
+            case 0:
+                cell.style.backgroundColor = 'rgba(163, 163, 163, 0.5)';
+                break;
+            case 1:
+                cell.style.backgroundColor = 'green';
+                break;
+            case 2:
+                cell.style.backgroundColor = 'yellow';
+                break;
+            case 3:
+                cell.style.backgroundColor = 'orange';
+                break;
+            case 4:
+                cell.style.backgroundColor = 'pink';
+                break;
         }
-        $.ajax({
-            url: JSONBIN_URL,
-            type: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY
-            },
-            data: JSON.stringify({ tableData: data }),
-            success: function(response) {
-                console.log('Tableau sauvegardé', response);
-            },
-            error: function(err) {
-                console.log('Erreur lors de la sauvegarde', err);
-            }
-        });
-    }
-
-    function chargerTableau() {
-        $.ajax({
-            url: JSONBIN_URL + '/latest',
-            type: 'GET',
-            headers: {
-                'X-Master-Key': JSONBIN_API_KEY
-            },
-            success: function(response) {
-                var data = response.record.tableData || [];
-                var tableau = document.getElementById("table-body");
-                for (var i = 0; i < data.length; i++) {
-                    var nouvelleLigne = tableau.insertRow();
-                    for (var j = 0; j < data[i].length; j++) {
-                        var cellule = nouvelleLigne.insertCell(j);
-                        cellule.contentEditable = "true";
-                        cellule.innerText = data[i][j];
-                    }
-                    var celluleSupprimer = nouvelleLigne.insertCell(data[i].length);
-                    var boutonSupprimer = document.createElement("button");
-                    boutonSupprimer.className = "delete-button";
-                    boutonSupprimer.textContent = "❌";
-                    boutonSupprimer.onclick = function() {
-                        supprimerLigne(this);
-                    };
-                    celluleSupprimer.appendChild(boutonSupprimer);
-                }
-            },
-            error: function(err) {
-                console.log('Erreur lors du chargement', err);
-            }
-        });
     }
 </script>
 
